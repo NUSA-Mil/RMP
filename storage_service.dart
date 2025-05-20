@@ -1,21 +1,22 @@
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 import 'movie.dart';
 
 class StorageService {
-  static Future<void> init() async {
-    await Hive.initFlutter();
-    Hive.registerAdapter(MovieAdapter());
-    await Hive.openBox<Movie>('movies');
+  Box<Movie> get _movieBox => Hive.box<Movie>('movies');
+
+  Future<List<Movie>> getAllMovies() async {
+    return _movieBox.values.toList();
   }
 
-  static Future<void> setTheme(bool isDark) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDark', isDark);
+  Future<void> addMovie(Movie movie) async {
+    await _movieBox.add(movie);
   }
 
-  static Future<bool> getTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('isDark') ?? false;
+  Future<void> updateMovie(Movie movie) async {
+    await movie.save();
+  }
+
+  Future<void> deleteMovie(Movie movie) async {
+    await movie.delete();
   }
 }

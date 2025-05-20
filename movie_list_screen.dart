@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:io';
 import 'movie.dart';
 import 'add_edit_movie_screen.dart';
 
@@ -9,7 +10,7 @@ class MovieListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Мои любимые фильмы'),
+        title: Text('Мои фильмы'),
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
@@ -21,9 +22,7 @@ class MovieListScreen extends StatelessWidget {
         valueListenable: Hive.box<Movie>('movies').listenable(),
         builder: (context, box, _) {
           if (box.isEmpty) {
-            return Center(
-              child: Text('Добавьте ваш первый фильм!', style: TextStyle(fontSize: 18)),
-            );
+            return Center(child: Text('Добавьте первый фильм'));
           }
           
           return ListView.builder(
@@ -38,39 +37,39 @@ class MovieListScreen extends StatelessWidget {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: Text('Удалить фильм?'),
-                      content: Text('Вы уверены, что хотите удалить "${movie.title}"?'),
+                      content: Text('Удалить "${movie.title}"?'),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(false),
                           child: Text('Отмена'),
+                          onPressed: () => Navigator.of(ctx).pop(false),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(true),
                           child: Text('Удалить', style: TextStyle(color: Colors.red)),
+                          onPressed: () => Navigator.of(ctx).pop(true),
                         ),
                       ],
                     ),
                   );
                 },
-                onDismissed: (direction) {
-                  box.deleteAt(index);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Фильм "${movie.title}" удалён')),
-                  );
-                },
+                onDismissed: (_) => box.deleteAt(index),
                 child: ListTile(
                   leading: movie.imagePath != null
-                      ? CircleAvatar(backgroundImage: FileImage(movie.imagePath as dynamic))
+                      ? CircleAvatar(
+                          backgroundImage: FileImage(File(movie.imagePath!)),
+                        )
                       : CircleAvatar(child: Icon(Icons.movie)),
                   title: Text(movie.title),
                   subtitle: Text(
-                    '${movie.year != null ? movie.year.toString() : "Год неизвестен"}'
+                    '${movie.year?.toString() ?? "Год не указан"}'
                     '${movie.genre != null ? " • ${movie.genre}" : ""}',
                   ),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AddEditMovieScreen(movie: movie, index: index),
+                      builder: (context) => AddEditMovieScreen(
+                        movie: movie,
+                        index: index,
+                      ),
                     ),
                   ),
                 ),

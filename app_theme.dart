@@ -1,24 +1,17 @@
 import 'package:flutter/material.dart';
 
-class AppTheme with ChangeNotifier {
-  static final lightTheme = ThemeData(
-    primarySwatch: Colors.blue,
-    brightness: Brightness.light,
-  );
+class AppTheme {
+  static ThemeData get lightTheme {
+    return ThemeData(
+      primarySwatch: Colors.blue,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+    );
+  }
 
-  static final darkTheme = ThemeData(
-    primarySwatch: Colors.blueGrey,
-    brightness: Brightness.dark,
-  );
-
-  bool _isDark;
-
-  AppTheme(this._isDark);
-
-  bool get isDark => _isDark;
-
-  set isDark(bool value) {
-    _isDark = value;
-    notifyListeners();
+  static ThemeData get darkTheme {
+    return ThemeData.dark().copyWith(
+      primaryColor: Colors.blueGrey[800],
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+    );
   }
 }

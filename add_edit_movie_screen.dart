@@ -8,7 +8,7 @@ class AddEditMovieScreen extends StatefulWidget {
   final Movie? movie;
   final int? index;
 
-  AddEditMovieScreen({this.movie, this.index});
+  const AddEditMovieScreen({this.movie, this.index});
 
   @override
   _AddEditMovieScreenState createState() => _AddEditMovieScreenState();
@@ -17,16 +17,16 @@ class AddEditMovieScreen extends StatefulWidget {
 class _AddEditMovieScreenState extends State<AddEditMovieScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _title;
-  late int? _year;
-  late String? _genre;
+  late String _yearText; 
+  late String _genre;
   File? _image;
 
   @override
   void initState() {
     super.initState();
     _title = widget.movie?.title ?? '';
-    _year = widget.movie?.year;
-    _genre = widget.movie?.genre;
+    _yearText = widget.movie?.year?.toString() ?? '';
+    _genre = widget.movie?.genre ?? '';
     if (widget.movie?.imagePath != null) {
       _image = File(widget.movie!.imagePath!);
     }
@@ -41,38 +41,21 @@ class _AddEditMovieScreenState extends State<AddEditMovieScreen> {
 
   void _saveMovie() {
     if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
 
     final newMovie = Movie(
       id: widget.movie?.id ?? DateTime.now().toString(),
       title: _title,
-      year: _year,
-      genre: _genre,
+      year: _yearText.isNotEmpty ? int.tryParse(_yearText) : null,
+      genre: _genre.isNotEmpty ? _genre : null,
       imagePath: _image?.path,
     );
 
-    // Проверка изменений для существующего фильма
-    if (widget.movie != null) {
-      final oldMovie = widget.movie!;
-      final hasChanges = 
-          oldMovie.title != _title ||
-          oldMovie.year != _year ||
-          oldMovie.genre != _genre ||
-          oldMovie.imagePath != _image?.path;
-
-      if (!hasChanges) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Нет изменений для сохранения')),
-        );
-        Navigator.pop(context);
-        return;
-      }
-    }
-
-    final movieBox = Hive.box<Movie>('movies');
+    final box = Hive.box<Movie>('movies');
     if (widget.index != null) {
-      movieBox.putAt(widget.index!, newMovie);
+      box.putAt(widget.index!, newMovie);
     } else {
-      movieBox.add(newMovie);
+      box.add(newMovie);
     }
     Navigator.pop(context);
   }
@@ -81,7 +64,7 @@ class _AddEditMovieScreenState extends State<AddEditMovieScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.movie == null ? 'Добавить фильм' : 'Редактировать фильм'),
+        title: Text(widget.movie == null ? 'Добавить фильм' : 'Редактировать'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -93,30 +76,43 @@ class _AddEditMovieScreenState extends State<AddEditMovieScreen> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: _image != null ? FileImage(_image!) : null,
-                  child: _image == null ? Icon(Icons.add_a_photo, size: 40) : null,
+                  backgroundImage: _image != null 
+                      ? FileImage(_image!) 
+                      : null,
+                  child: _image == null 
+                      ? Icon(Icons.add_a_photo, size: 40) 
+                      : null,
                 ),
               ),
               SizedBox(height: 20),
               TextFormField(
                 initialValue: _title,
-                decoration: InputDecoration(labelText: 'Название фильма', border: OutlineInputBorder()),
-                validator: (value) => value?.isEmpty ?? true ? 'Пожалуйста, введите название' : null,
+                decoration: InputDecoration(
+                  labelText: 'Название*',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) => 
+                    value?.isEmpty ?? true ? 'Обязательное поле' : null,
                 onSaved: (value) => _title = value!,
               ),
               SizedBox(height: 16),
               TextFormField(
-                initialValue: _year?.toString(),
-                decoration: InputDecoration(labelText: 'Год выпуска', border: OutlineInputBorder()),
+                initialValue: _yearText,
+                decoration: InputDecoration(
+                  labelText: 'Год',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
-                onSaved: (value) => _year = value?.isNotEmpty == true ? int.parse(value!) : null,
+                onSaved: (value) => _yearText = value ?? '',
               ),
               SizedBox(height: 16),
               TextFormField(
                 initialValue: _genre,
-                decoration: InputDecoration(labelText: 'Жанр', border: OutlineInputBorder()),
-                onSaved: (value) => _genre = value,
+                decoration: InputDecoration(
+                  labelText: 'Жанр',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (value) => _genre = value ?? '',
               ),
               SizedBox(height: 24),
               Row(
@@ -124,7 +120,7 @@ class _AddEditMovieScreenState extends State<AddEditMovieScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Отмена', style: TextStyle(fontSize: 18)),
+                      child: Text('Отмена'),
                       style: OutlinedButton.styleFrom(
                         minimumSize: Size(double.infinity, 50),
                       ),
@@ -134,7 +130,7 @@ class _AddEditMovieScreenState extends State<AddEditMovieScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _saveMovie,
-                      child: Text('Сохранить', style: TextStyle(fontSize: 18)),
+                      child: Text('Сохранить'),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(double.infinity, 50),
                       ),

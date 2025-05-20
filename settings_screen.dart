@@ -12,25 +12,17 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Настройки'),
-      ),
+      appBar: AppBar(title: Text('Настройки')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Тема приложения',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
+            Text('Тема', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SwitchListTile(
-              title: Text('Тёмная тема'),
+              title: Text('Тёмный режим'),
               value: isDarkMode,
-              onChanged: (value) {
-                onThemeChanged(value);
-              },
+              onChanged: onThemeChanged,
             ),
           ],
         ),
